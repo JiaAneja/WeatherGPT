@@ -1,0 +1,246 @@
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --wx-bg: #061018;
+  --wx-surface: #0a1720;
+  --wx-surface-2: #0e1e29;
+  --wx-surface-3: #132632;
+  --wx-border: rgba(148, 163, 184, .14);
+  --wx-border-strong: rgba(34, 211, 238, .28);
+  --wx-text: #edf7fa;
+  --wx-muted: #8ea5b2;
+  --wx-cyan: #22d3ee;
+  --wx-green: #34d399;
+}
+
+html { scroll-behavior: smooth; background: var(--wx-bg); }
+body {
+  @apply antialiased overflow-x-hidden;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--wx-text);
+  background:
+    radial-gradient(circle at 12% -8%, rgba(34,211,238,.10), transparent 28%),
+    radial-gradient(circle at 88% 0%, rgba(52,211,153,.06), transparent 24%),
+    linear-gradient(180deg, #061018 0%, #07131c 45%, #061018 100%);
+}
+button,input,textarea,select { font: inherit; }
+::selection { background: rgba(34,211,238,.24); color: #fff; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #061018; }
+::-webkit-scrollbar-thumb { background: #294352; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #3d5d6d; }
+
+@layer components {
+  .glass-panel,
+  .glass-card {
+    @apply rounded-2xl transition-all duration-200;
+    background: linear-gradient(145deg, rgba(14,30,41,.94), rgba(8,21,29,.94)) !important;
+    border: 1px solid var(--wx-border) !important;
+    box-shadow: 0 18px 50px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.025) !important;
+  }
+  .glass-card:hover {
+    border-color: var(--wx-border-strong) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 22px 55px rgba(0,0,0,.27), 0 0 30px rgba(34,211,238,.035) !important;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold text-white transition-all duration-200;
+    background: linear-gradient(135deg,#0891b2,#0e7490) !important;
+    box-shadow: 0 10px 26px rgba(8,145,178,.20) !important;
+  }
+  .btn-primary:hover { background: linear-gradient(135deg,#06b6d4,#0891b2) !important; transform: translateY(-1px); }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition-all duration-200;
+    background: #0d1d28 !important; color: #d9e7ed !important; border: 1px solid #294250 !important;
+  }
+  .btn-secondary:hover { background: #132632 !important; border-color: rgba(34,211,238,.38) !important; }
+  .input-field {
+    @apply w-full rounded-xl px-4 py-3 outline-none transition;
+    background: #0c1c27 !important; color: #edf7fa !important; border: 1px solid #294250 !important;
+  }
+  .input-field::placeholder { color: #6f8794 !important; }
+  .input-field:focus { border-color: var(--wx-cyan) !important; box-shadow: 0 0 0 3px rgba(34,211,238,.10) !important; }
+}
+
+/* Cohesive dark visual system for legacy light-first utility classes. */
+.bg-white { background-color: var(--wx-surface) !important; }
+.bg-white\/95 { background-color: rgba(10,23,32,.95) !important; }
+.bg-white\/90 { background-color: rgba(10,23,32,.90) !important; }
+.bg-slate-50 { background-color: #081720 !important; }
+.bg-slate-100 { background-color: #10222e !important; }
+.bg-slate-200 { background-color: #18303d !important; }
+.text-slate-950 { color: #f4fbfd !important; }
+.text-slate-900 { color: #edf7fa !important; }
+.text-slate-800 { color: #dce9ee !important; }
+.text-slate-700 { color: #c3d3db !important; }
+.text-slate-600 { color: #a8bcc6 !important; }
+.text-slate-500 { color: var(--wx-muted) !important; }
+.text-slate-400 { color: #78909d !important; }
+.border-slate-200 { border-color: var(--wx-border) !important; }
+.border-slate-300 { border-color: #294250 !important; }
+.border-slate-800 { border-color: rgba(148,163,184,.13) !important; }
+
+/* Keep semantic status colors readable on dark surfaces. */
+.bg-blue-50 { background: rgba(14,165,233,.10) !important; }
+.bg-emerald-50 { background: rgba(16,185,129,.10) !important; }
+.bg-amber-50 { background: rgba(245,158,11,.10) !important; }
+.bg-orange-50 { background: rgba(249,115,22,.10) !important; }
+.bg-rose-50 { background: rgba(244,63,94,.10) !important; }
+
+.leaflet-container { background: #07131c !important; font-family: inherit; }
+.leaflet-control-zoom a { background: #0b1a24 !important; color: #d8e8ee !important; border-color: #294250 !important; }
+.leaflet-popup-content-wrapper { background: #0b1922 !important; color: #edf7fa !important; border: 1px solid #294250 !important; border-radius: 14px !important; box-shadow: 0 18px 45px rgba(0,0,0,.35) !important; }
+.leaflet-popup-tip { background: #0b1922 !important; }
+.leaflet-bar { border-color: #294250 !important; }
+
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {
+  outline: 2px solid var(--wx-cyan); outline-offset: 2px;
+}
+
+
+/* WeatherGPT motion system: subtle, continuous and presentation-friendly. */
+.weather-atmosphere {
+  position: relative;
+  isolation: isolate;
+}
+.weather-atmosphere::before,
+.weather-atmosphere::after {
+  content: "";
+  position: fixed;
+  width: 42vw;
+  height: 42vw;
+  max-width: 620px;
+  max-height: 620px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(55px);
+  opacity: .12;
+}
+.weather-atmosphere::before {
+  top: -18vw; left: -14vw;
+  background: radial-gradient(circle, rgba(34,211,238,.8), transparent 66%);
+  animation: weatherDrift 16s ease-in-out infinite alternate;
+}
+.weather-atmosphere::after {
+  right: -14vw; bottom: -20vw;
+  background: radial-gradient(circle, rgba(52,211,153,.7), transparent 66%);
+  animation: weatherDrift 20s ease-in-out infinite alternate-reverse;
+}
+.weather-enter {
+  animation: weatherSlideUp .42s cubic-bezier(.2,.75,.25,1) both;
+}
+.weather-enter:nth-child(2n) { animation-delay: 35ms; }
+.weather-enter:nth-child(3n) { animation-delay: 70ms; }
+.weather-glow { animation: weatherGlow 3.2s ease-in-out infinite; }
+.weather-pulse { animation: weatherPulse 2.4s ease-in-out infinite; }
+.weather-float { animation: weatherFloat 5s ease-in-out infinite; }
+.weather-shimmer {
+  background: linear-gradient(100deg, transparent 15%, rgba(255,255,255,.06) 45%, transparent 75%);
+  background-size: 220% 100%;
+  animation: weatherShimmer 2.8s linear infinite;
+}
+.voice-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  display: inline-block; background: #64748b;
+  box-shadow: 0 0 0 0 rgba(34,211,238,.0);
+  transition: .2s ease;
+}
+.voice-dot.is-listening {
+  background: #fb7185;
+  box-shadow: 0 0 0 5px rgba(251,113,133,.10);
+  animation: voiceDot 1s ease-in-out infinite;
+}
+@keyframes weatherSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes weatherDrift {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(7vw,5vh,0) scale(1.12); }
+}
+@keyframes weatherGlow {
+  0%,100% { box-shadow: 0 0 0 rgba(34,211,238,0); }
+  50% { box-shadow: 0 0 34px rgba(34,211,238,.10); }
+}
+@keyframes weatherPulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+@keyframes weatherFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes weatherShimmer {
+  from { background-position: 220% 0; }
+  to { background-position: -20% 0; }
+}
+@keyframes voiceDot {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}
+
+
+/* Futuristic WeatherGPT assistant surface */
+.ai-orb {
+  position: relative;
+  background: radial-gradient(circle at 35% 30%, rgba(103,232,249,.35), rgba(34,211,238,.08) 42%, rgba(6,16,24,.9) 72%);
+  box-shadow: 0 0 24px rgba(34,211,238,.18), inset 0 0 18px rgba(34,211,238,.08);
+  animation: orbPulse 3.8s ease-in-out infinite;
+}
+.ai-orb::before {
+  content: ''; position: absolute; inset: -5px; border: 1px solid rgba(34,211,238,.10); border-radius: 18px; animation: orbRing 5s linear infinite;
+}
+.ai-orb-core { position: relative; z-index: 1; filter: drop-shadow(0 0 8px rgba(103,232,249,.55)); }
+.chat-futuristic {
+  background: linear-gradient(145deg, rgba(13,30,41,.92), rgba(5,16,24,.96)) !important;
+  border: 1px solid rgba(103,232,249,.13) !important;
+  box-shadow: 0 16px 45px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+@keyframes orbPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes orbRing { to { transform: rotate(360deg); } }
+
+/* Futuristic WeatherGPT Voice experience */
+.voice-hero {
+  position: relative; overflow: hidden; min-height: 128px; border-radius: 28px;
+  border: 1px solid rgba(34,211,238,.18);
+  background:
+    radial-gradient(circle at 15% 50%, rgba(34,211,238,.13), transparent 28%),
+    radial-gradient(circle at 82% 30%, rgba(99,102,241,.10), transparent 30%),
+    linear-gradient(135deg, rgba(8,22,31,.98), rgba(7,15,25,.92));
+  box-shadow: inset 0 1px rgba(255,255,255,.04), 0 22px 70px rgba(0,0,0,.24);
+  display:flex; align-items:center; gap:24px; padding:20px 26px;
+}
+.voice-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(110deg, transparent 20%, rgba(255,255,255,.035) 45%, transparent 70%); background-size:220% 100%; animation:weatherShimmer 6s linear infinite; }
+.voice-hero-orbit { position:absolute; border:1px solid rgba(34,211,238,.08); border-radius:50%; pointer-events:none; }
+.orbit-one { width:240px; height:240px; left:-100px; top:-55px; animation:weatherFloat 7s ease-in-out infinite; }
+.orbit-two { width:330px; height:330px; left:-145px; top:-100px; border-color:rgba(99,102,241,.07); animation:weatherFloat 10s ease-in-out infinite reverse; }
+.voice-hero-orb { position:relative; width:82px; height:82px; min-width:82px; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle, rgba(34,211,238,.18), rgba(10,22,32,.9) 62%); border:1px solid rgba(34,211,238,.4); box-shadow:0 0 35px rgba(34,211,238,.15), inset 0 0 25px rgba(34,211,238,.08); z-index:1; }
+.voice-hero-core { width:52px; height:52px; border-radius:50%; display:grid; place-items:center; color:#a5f3fc; background:linear-gradient(145deg,#123846,#071820); border:1px solid rgba(103,232,249,.45); box-shadow:0 0 20px rgba(34,211,238,.22); }
+.voice-hero-orb.speaking,.voice-hero-orb.listening { animation:voiceOrb 1.35s ease-in-out infinite; }
+.voice-ring { position:absolute; inset:7px; border-radius:50%; border:1px solid rgba(34,211,238,.18); }
+.ring-b { inset:-7px; border-color:rgba(99,102,241,.14); animation:voiceRing 2.4s ease-out infinite; }
+.ring-a { animation:voiceRing 2.4s ease-out infinite .8s; }
+.voice-hero-copy { position:relative; z-index:1; max-width:650px; }
+.voice-kicker { font-size:10px; letter-spacing:.18em; font-weight:800; color:#67e8f9; }
+.voice-live-dot { width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 12px #34d399; }
+.voice-hero h1 { margin:5px 0 3px; font-size:clamp(20px,3vw,31px); line-height:1.1; font-weight:900; letter-spacing:-.035em; color:#f2fbff; }
+.voice-hero h1 span { color:#67e8f9; }
+.voice-hero p { margin:0; color:#88a5b2; font-size:12px; line-height:1.55; max-width:600px; }
+.quick-prompts { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+.quick-prompts::-webkit-scrollbar {display:none}
+.quick-prompts button { flex-shrink:0; border:1px solid rgba(148,163,184,.14); background:rgba(10,23,32,.72); color:#9db2bd; border-radius:999px; padding:7px 12px; font-size:11px; transition:.2s; }
+.quick-prompts button:hover { border-color:rgba(34,211,238,.4); color:#a5f3fc; background:rgba(34,211,238,.06); transform:translateY(-1px); }
+@keyframes voiceOrb { 0%,100%{transform:scale(1);box-shadow:0 0 35px rgba(34,211,238,.15),inset 0 0 25px rgba(34,211,238,.08)} 50%{transform:scale(1.06);box-shadow:0 0 55px rgba(34,211,238,.30),inset 0 0 32px rgba(34,211,238,.14)} }
+@keyframes voiceRing { 0%{transform:scale(.82);opacity:.65} 100%{transform:scale(1.25);opacity:0} }
+@media (max-width:640px){ .voice-hero{min-height:112px;padding:17px;gap:14px;border-radius:22px}.voice-hero-orb{width:64px;height:64px;min-width:64px}.voice-hero-core{width:42px;height:42px}.voice-hero p{font-size:11px}.voice-hero h1{font-size:21px}.voice-kicker{font-size:8px} }
