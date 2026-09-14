@@ -6,7 +6,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 interface WeatherContext {
@@ -34,130 +35,319 @@ interface WeatherContext {
 
 interface RequestPayload {
   message: string;
-  language?: string; // 'en' | 'hi' | 'gu' | 'mr' | 'ta' | 'bn' | 'te'
+  language?: string;
   context: WeatherContext;
 }
 
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", {
+      headers: corsHeaders,
+    });
   }
 
   try {
-    const { message, language = "en", context } = (await req.json()) as RequestPayload;
+    const {
+      message,
+      language = "en",
+      context,
+    } = (await req.json()) as RequestPayload;
 
+    // Validate request
     if (!message || !context) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: message and context are required." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Missing required fields: message and context are required.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
-    // System prompt enforcing strict grounding: NO invented weather values!
-    const systemPrompt = `You are WeatherGPT, India's premier AI meteorological intelligence and disaster decision-support assistant.
-Your duty is to convert VERIFIED METEOROLOGICAL OBSERVATIONS into clear, explainable, and actionable advice.
+    // Supported languages
+    const languageNames: Record<string, string> = {
+      en: "English",
+      hi: "Hindi",
+      gu: "Gujarati",
+      mr: "Marathi",
+      ta: "Tamil",
+      bn: "Bengali",
+      te: "Telugu",
+      pa: "Punjabi",
+      kn: "Kannada",
+      ml: "Malayalam",
+      ur: "Urdu",
+      or: "Odia",
+      as: "Assamese",
+    };
+
+    const selectedLanguage =
+      languageNames[language] || "the same language as the user";
+
+    // Strict meteorological grounding prompt
+    const systemPrompt = `
+You are WeatherGPT, an AI meteorological intelligence and disaster
+decision-support assistant for India.
+
+Your job is to explain VERIFIED WEATHER INFORMATION clearly and safely.
 
 CRITICAL RULES:
-1. NEVER invent, extrapolate, or hallucinate weather metrics.
-2. You MUST use ONLY the verified weather context provided below.
-3. If the user asks about a weather parameter not present in the context, clearly state that verified meteorological data for that specific parameter is currently unavailable.
-4. Adhere to official disaster management guidelines (IMD, NDMA, SDMA).
-5. Explain WHY a risk level is what it is (e.g. "Because relative humidity is 88% and rainfall is 45mm/hr, waterlogging risk is high").
-6. Language: Respond in ${({
-      en: 'English', hi: 'Hindi', gu: 'Gujarati', mr: 'Marathi', ta: 'Tamil',
-      bn: 'Bengali', te: 'Telugu', pa: 'Punjabi', kn: 'Kannada', ml: 'Malayalam',
-      ur: 'Urdu', or: 'Odia', as: 'Assamese'
-    } as Record<string, string>)[language] || 'the same language as the user'}.
-CRITICAL LANGUAGE RULE: Preserve the user's language, script, tone, and intent. If the user writes Hindi, answer in Hindi; if Gujarati, answer in Gujarati, etc. Never translate the answer into English unless the user asks.
-7. Return your response in clean JSON format matching this schema:
+
+1. NEVER invent weather values.
+2. NEVER create temperatures, rainfall, wind speeds, AQI values,
+   UV values, alerts, forecasts, or other meteorological data that
+   are not present in the VERIFIED WEATHER CONTEXT.
+3. Use ONLY the weather information provided in the context.
+4. If the user asks for information that is not available in the context,
+   clearly say that verified data for that specific parameter is
+   currently unavailable.
+5. Do not pretend that an estimate is an official observation.
+6. Do not claim that information comes directly from IMD unless the
+   provided context explicitly identifies IMD as the source.
+7. Give practical and safe recommendations.
+8. For severe weather situations, prioritize safety.
+9. Explain WHY you selected the risk level using the available
+   weather observations.
+10. Do not exaggerate risk.
+11. Do not provide fabricated future weather predictions.
+12. If forecast information is available in forecast_summary or
+    rain_probability, you may use it, but do not invent additional
+    forecast values.
+
+LANGUAGE RULE:
+
+Respond in ${selectedLanguage}.
+
+IMPORTANT:
+Preserve the user's language, script, tone, and intent.
+
+If the user asks in Hindi, answer in Hindi.
+If the user asks in Gujarati, answer in Gujarati.
+If the user asks in English, answer in English.
+
+Do not unnecessarily translate the user's question.
+
+RESPONSE FORMAT:
+
+Return ONLY valid JSON.
+
+The JSON must follow this structure:
+
 {
-  "answer": "Clear, friendly, conversational answer directly answering user's query.",
-  "risk_level": "Low" | "Moderate" | "High" | "Severe",
+  "answer": "Clear, friendly answer directly addressing the user's question.",
+  "risk_level": "Low",
   "evidence": [
-    "Observation metric 1 that supports this answer",
-    "Observation metric 2 that supports this answer"
+    "Specific verified observation supporting the answer"
   ],
   "actionable_recommendations": [
-    "Specific actionable recommendation 1",
-    "Specific actionable recommendation 2"
+    "Specific practical recommendation"
   ],
-  "why_explanation": "Detailed explanation of why this conclusion was reached based on specific thresholds (e.g., wind speed, precipitation, heat index).",
-  "source": "${context.source}",
-  "verified_at": "${context.observed_at}"
-}`;
+  "why_explanation": "Explain why this conclusion was reached using the verified context.",
+  "source": "Source from the provided context",
+  "verified_at": "Verification time from the provided context"
+}
 
-    const apiKey = Deno.env.get("LLM_API_KEY") || Deno.env.get("GEMINI_API_KEY");
+The risk_level MUST be exactly one of:
 
-    // If an external LLM key is configured in Supabase Edge Secrets, call the provider API
+Low
+Moderate
+High
+Severe
+
+Do not add Markdown outside the JSON.
+`;
+
+    // Read Gemini API key from secure Supabase secrets
+    const apiKey =
+      Deno.env.get("GEMINI_API_KEY") ||
+      Deno.env.get("LLM_API_KEY");
+
+    // ============================================================
+    // GEMINI AI
+    // ============================================================
+
     if (apiKey) {
-      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: systemPrompt },
-                { text: `VERIFIED WEATHER CONTEXT:\n${JSON.stringify(context, null, 2)}\n\nUSER QUESTION:\n${message}` }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2, // Low temperature for high factual adherence
-            responseMimeType: "application/json"
-          }
-        })
-      });
+      const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
+          apiKey,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: systemPrompt,
+                  },
+                  {
+                    text:
+                      "VERIFIED WEATHER CONTEXT:\n" +
+                      JSON.stringify(context, null, 2) +
+                      "\n\nUSER QUESTION:\n" +
+                      message,
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+            },
+          }),
+        }
+      );
 
       const data = await response.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (rawText) {
-        return new Response(rawText, {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+
+      const rawText =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      // Return Gemini response if successful
+      if (response.ok && rawText) {
+        try {
+          // Validate that Gemini actually returned JSON
+          const parsedResponse = JSON.parse(rawText);
+
+          return new Response(JSON.stringify(parsedResponse), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          });
+        } catch {
+          // If Gemini returned malformed JSON, continue to fallback
+          console.error("Gemini returned invalid JSON:", rawText);
+        }
+      } else {
+        console.error(
+          "Gemini API request failed:",
+          JSON.stringify(data)
+        );
       }
+    } else {
+      console.error("GEMINI_API_KEY is not configured.");
     }
 
-    // Fallback verified rule-engine response if no LLM key is configured
-    // Demonstrates reliable zero-hallucination meteorological reasoning
-    const calculatedRisk = context.rainfall > 30 || (context.active_alerts && context.active_alerts.some(a => a.severity === 'RED'))
-      ? 'Severe'
-      : context.rainfall > 10 || context.wind_speed > 35 || (context.active_alerts && context.active_alerts.some(a => a.severity === 'ORANGE'))
-      ? 'High'
-      : context.rainfall > 2 || context.temperature > 38 || context.aqi > 150 || (context.active_alerts && context.active_alerts.length > 0)
-      ? 'Moderate'
-      : 'Low';
+    // ============================================================
+    // VERIFIED RULE-BASED FALLBACK
+    // ============================================================
+
+    const hasRedAlert =
+      context.active_alerts?.some(
+        (alert) => alert.severity.toUpperCase() === "RED"
+      ) ?? false;
+
+    const hasOrangeAlert =
+      context.active_alerts?.some(
+        (alert) => alert.severity.toUpperCase() === "ORANGE"
+      ) ?? false;
+
+    const calculatedRisk =
+      context.rainfall > 30 || hasRedAlert
+        ? "Severe"
+        : context.rainfall > 10 ||
+          context.wind_speed > 35 ||
+          hasOrangeAlert
+        ? "High"
+        : context.rainfall > 2 ||
+          context.temperature > 38 ||
+          context.aqi > 150 ||
+          (context.active_alerts?.length ?? 0) > 0
+        ? "Moderate"
+        : "Low";
+
+    const rainfallStatement =
+      context.rainfall > 0
+        ? `Rainfall is recorded at ${context.rainfall} mm with relative humidity of ${context.humidity}%.`
+        : "No immediate precipitation is recorded.";
+
+    const alertStatement =
+      context.active_alerts && context.active_alerts.length > 0
+        ? ` Active alert: ${context.active_alerts[0].title}.`
+        : "";
 
     const fallbackResponse = {
-      answer: `Based on verified IMD observations for ${context.location}, the current temperature is ${context.temperature}°C with ${context.weather_condition.toLowerCase()} conditions. ${
-        context.rainfall > 0 ? `Rainfall is recorded at ${context.rainfall} mm with high relative humidity (${context.humidity}%).` : `No immediate precipitation recorded.`
-      } ${context.active_alerts && context.active_alerts.length > 0 ? `Active Alert: ${context.active_alerts[0].title}.` : ''}`,
+      answer:
+        `Based on the verified weather information for ${context.location}, ` +
+        `the current temperature is ${context.temperature}°C with ` +
+        `${context.weather_condition.toLowerCase()} conditions. ` +
+        rainfallStatement +
+        alertStatement,
+
       risk_level: calculatedRisk,
+
       evidence: [
-        `Temperature: ${context.temperature}°C (Feels like: ${context.feels_like || context.temperature}°C)`,
-        `Rainfall: ${context.rainfall} mm (Humidity: ${context.humidity}%)`,
+        `Temperature: ${context.temperature}°C (Feels like: ${
+          context.feels_like ?? context.temperature
+        }°C)`,
+        `Rainfall: ${context.rainfall} mm`,
+        `Humidity: ${context.humidity}%`,
         `Wind Speed: ${context.wind_speed} km/h`,
-        `AQI: ${context.aqi} | UV Index: ${context.uv_index}`
+        `AQI: ${context.aqi}`,
+        `UV Index: ${context.uv_index}`,
       ],
+
       actionable_recommendations: [
-        context.rainfall > 5 ? "Carry heavy-duty rain gear; avoid low-lying underpasses." : "Standard outdoor activities are safe.",
-        context.uv_index > 7 ? "High UV index; wear sunscreen and UV sunglasses." : "Moderate solar exposure.",
-        context.aqi > 100 ? "Sensitive individuals should wear an N95 mask outdoors." : "Air quality is within acceptable range."
+        context.rainfall > 5
+          ? "Carry rain protection and avoid low-lying or waterlogged areas."
+          : "Normal outdoor activities can be considered based on current conditions.",
+
+        context.uv_index > 7
+          ? "UV exposure is high; use sunscreen, sunglasses, and limit prolonged direct exposure."
+          : "Normal precautions for sun exposure are sufficient.",
+
+        context.aqi > 100
+          ? "People sensitive to air pollution should consider reducing prolonged outdoor exposure."
+          : "Air quality is not currently above the configured caution threshold.",
       ],
-      why_explanation: `Decision rationale: Evaluated current precipitation (${context.rainfall}mm), wind velocity (${context.wind_speed}km/h), and active meteorological bulletins. Risk scored at ${calculatedRisk} based on IMD threshold guidelines.`,
-      source: context.source || "India Meteorological Department (IMD)",
-      verified_at: context.observed_at
+
+      why_explanation:
+        `The ${calculatedRisk} risk level is based on the available verified ` +
+        `observations including rainfall of ${context.rainfall} mm, ` +
+        `wind speed of ${context.wind_speed} km/h, temperature of ` +
+        `${context.temperature}°C, AQI of ${context.aqi}, and the presence ` +
+        `of active weather alerts.`,
+
+      source:
+        context.source || "Verified meteorological data",
+
+      verified_at: context.observed_at,
     };
 
     return new Response(JSON.stringify(fallbackResponse), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
     });
   } catch (error) {
+    console.error("weather-ai-chat error:", error);
+
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unexpected server error",
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 });
