@@ -70,7 +70,6 @@ const createPulsingIcon = (
         "
         title="${label}"
       >
-
         <span
           style="
             position: absolute;
@@ -94,7 +93,6 @@ const createPulsingIcon = (
             box-shadow: 0 0 10px ${color};
           "
         ></span>
-
       </div>
     `,
 
@@ -108,7 +106,6 @@ const createPulsingIcon = (
 // ---------------------------------------------------------
 
 export const IndiaWeatherMap: React.FC = () => {
-
   const [selectedDistrict, setSelectedDistrict] =
     useState<DistrictInfo | null>(null);
 
@@ -134,25 +131,16 @@ export const IndiaWeatherMap: React.FC = () => {
   ];
 
   // -------------------------------------------------------
-  // CARTO API key from .env
-  // -------------------------------------------------------
-
-  const cartoApiKey =
-    import.meta.env.VITE_CARTO_API_KEY;
-
-  // -------------------------------------------------------
   // District click handler
   // -------------------------------------------------------
 
   const handleDistrictClick = async (
     district: DistrictInfo
   ) => {
-
     setSelectedDistrict(district);
     setIsLoadingDetails(true);
 
     try {
-
       const weather =
         await WeatherService.getCurrentWeather(
           district
@@ -166,18 +154,13 @@ export const IndiaWeatherMap: React.FC = () => {
 
       setDistrictWeather(weather);
       setDistrictAlerts(alerts);
-
     } catch (e) {
-
       console.error(
         'Error fetching district weather:',
         e
       );
-
     } finally {
-
       setIsLoadingDetails(false);
-
     }
   };
 
@@ -195,15 +178,12 @@ export const IndiaWeatherMap: React.FC = () => {
   const getDistrictPinColor = (
     d: DistrictInfo
   ) => {
-
     if (activeLayer === 'temperature') {
-
       return d.region === 'North'
         ? '#f59e0b'
         : d.region === 'South'
         ? '#06b6d4'
         : '#f97316';
-
     }
 
     if (activeLayer === 'wind') {
@@ -215,7 +195,6 @@ export const IndiaWeatherMap: React.FC = () => {
     }
 
     if (activeLayer === 'alerts') {
-
       const alerts =
         WeatherService.getAlertsForLocation(
           d.name,
@@ -267,7 +246,6 @@ export const IndiaWeatherMap: React.FC = () => {
         overflow-hidden
       "
     >
-
       {/* ===================================================
           1. MAP LAYER CONTROLS
       =================================================== */}
@@ -291,7 +269,6 @@ export const IndiaWeatherMap: React.FC = () => {
           shadow-2xl
         "
       >
-
         {/* Radar */}
 
         <button
@@ -315,13 +292,11 @@ export const IndiaWeatherMap: React.FC = () => {
             }
           `}
         >
-
           <Droplets className="w-3.5 h-3.5" />
 
           <span>
             Precipitation / Radar
           </span>
-
         </button>
 
         {/* Temperature */}
@@ -347,13 +322,11 @@ export const IndiaWeatherMap: React.FC = () => {
             }
           `}
         >
-
           <Thermometer className="w-3.5 h-3.5" />
 
           <span>
             Temperature
           </span>
-
         </button>
 
         {/* Wind */}
@@ -379,13 +352,11 @@ export const IndiaWeatherMap: React.FC = () => {
             }
           `}
         >
-
           <Wind className="w-3.5 h-3.5" />
 
           <span>
             Wind Vectors
           </span>
-
         </button>
 
         {/* Lightning */}
@@ -411,13 +382,11 @@ export const IndiaWeatherMap: React.FC = () => {
             }
           `}
         >
-
           <Zap className="w-3.5 h-3.5" />
 
           <span>
             Lightning
           </span>
-
         </button>
 
         {/* Alerts */}
@@ -443,15 +412,12 @@ export const IndiaWeatherMap: React.FC = () => {
             }
           `}
         >
-
           <ShieldAlert className="w-3.5 h-3.5" />
 
           <span>
             IMD Alert Zones
           </span>
-
         </button>
-
       </div>
 
       {/* ===================================================
@@ -459,7 +425,6 @@ export const IndiaWeatherMap: React.FC = () => {
       =================================================== */}
 
       <div className="w-full h-full">
-
         <MapContainer
           center={indiaCenter}
           zoom={5}
@@ -472,12 +437,12 @@ export const IndiaWeatherMap: React.FC = () => {
         >
 
           {/* =================================================
-              CARTO DARK BASEMAP
+              NORMAL OPENSTREETMAP BASEMAP
           ================================================= */}
 
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url={`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`}
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
           {/* =================================================
@@ -487,19 +452,15 @@ export const IndiaWeatherMap: React.FC = () => {
           {activeLayer === 'radar' &&
             dopplerRadars.map(
               (radar, idx) => (
-
                 <Circle
                   key={idx}
-
                   center={[
                     radar.lat,
                     radar.lng,
                   ]}
-
                   radius={
                     radar.rangeKm * 1000
                   }
-
                   pathOptions={{
                     color: '#06b6d4',
                     fillColor: '#06b6d4',
@@ -508,7 +469,6 @@ export const IndiaWeatherMap: React.FC = () => {
                     dashArray: '4, 8',
                   }}
                 />
-
               )
             )}
 
@@ -518,7 +478,6 @@ export const IndiaWeatherMap: React.FC = () => {
 
           {INDIAN_DISTRICTS.map(
             (district) => {
-
               const color =
                 getDistrictPinColor(
                   district
@@ -531,17 +490,13 @@ export const IndiaWeatherMap: React.FC = () => {
                 );
 
               return (
-
                 <Marker
                   key={district.id}
-
                   position={[
                     district.lat,
                     district.lng,
                   ]}
-
                   icon={customIcon}
-
                   eventHandlers={{
                     click: () =>
                       handleDistrictClick(
@@ -549,11 +504,8 @@ export const IndiaWeatherMap: React.FC = () => {
                       ),
                   }}
                 >
-
                   <Popup>
-
                     <div className="p-1 space-y-1">
-
                       <h4 className="font-bold text-xs text-white">
                         {district.name}
                       </h4>
@@ -566,19 +518,13 @@ export const IndiaWeatherMap: React.FC = () => {
                       <p className="text-[10px] text-cyan-400 font-mono">
                         Click marker to inspect telemetry
                       </p>
-
                     </div>
-
                   </Popup>
-
                 </Marker>
-
               );
             }
           )}
-
         </MapContainer>
-
       </div>
 
       {/* ===================================================
@@ -586,7 +532,6 @@ export const IndiaWeatherMap: React.FC = () => {
       =================================================== */}
 
       {selectedDistrict && (
-
         <div
           className="
             absolute
@@ -608,15 +553,12 @@ export const IndiaWeatherMap: React.FC = () => {
             justify-between
           "
         >
-
           <div>
 
             {/* Drawer Header */}
 
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-
               <div>
-
                 <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold">
                   District Telemetry Feed
                 </span>
@@ -630,7 +572,6 @@ export const IndiaWeatherMap: React.FC = () => {
                   {selectedDistrict.region}{' '}
                   India
                 </p>
-
               </div>
 
               <button
@@ -645,19 +586,14 @@ export const IndiaWeatherMap: React.FC = () => {
                   hover:bg-slate-800
                 "
               >
-
                 <X className="w-5 h-5" />
-
               </button>
-
             </div>
 
             {/* Content */}
 
             {isLoadingDetails ? (
-
               <div className="py-16 text-center space-y-2">
-
                 <div
                   className="
                     w-6
@@ -672,13 +608,10 @@ export const IndiaWeatherMap: React.FC = () => {
                 />
 
                 <p className="text-xs text-slate-400 font-mono">
-                  Polling IMD station sensors...
+                  Loading weather data...
                 </p>
-
               </div>
-
             ) : districtWeather ? (
-
               <div className="mt-6 space-y-5">
 
                 {/* Temperature */}
@@ -695,9 +628,7 @@ export const IndiaWeatherMap: React.FC = () => {
                     justify-between
                   "
                 >
-
                   <div>
-
                     <span className="text-4xl font-extrabold text-white">
                       {districtWeather.temperature}°C
                     </span>
@@ -710,11 +641,9 @@ export const IndiaWeatherMap: React.FC = () => {
                     <span className="text-xs text-cyan-300 font-medium">
                       {districtWeather.condition}
                     </span>
-
                   </div>
 
                   <div className="text-right text-xs text-slate-400 space-y-1">
-
                     <p>
                       Rain:{' '}
                       <strong className="text-white">
@@ -737,17 +666,13 @@ export const IndiaWeatherMap: React.FC = () => {
                         {districtWeather.aqi}
                       </strong>
                     </p>
-
                   </div>
-
                 </div>
 
                 {/* Active Alerts */}
 
                 {districtAlerts.length > 0 ? (
-
                   <div className="space-y-2">
-
                     <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold block">
                       Active Warning (
                       {districtAlerts.length})
@@ -755,7 +680,6 @@ export const IndiaWeatherMap: React.FC = () => {
 
                     {districtAlerts.map(
                       (alert) => (
-
                         <div
                           key={alert.id}
                           className="
@@ -768,9 +692,7 @@ export const IndiaWeatherMap: React.FC = () => {
                             text-rose-200
                           "
                         >
-
                           <div className="flex items-center gap-1.5 font-bold mb-1">
-
                             <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
 
                             <span>
@@ -778,22 +700,16 @@ export const IndiaWeatherMap: React.FC = () => {
                               •{' '}
                               {alert.title}
                             </span>
-
                           </div>
 
                           <p className="text-[11px] leading-relaxed text-rose-200/80">
                             {alert.description}
                           </p>
-
                         </div>
-
                       )
                     )}
-
                   </div>
-
                 ) : (
-
                   <div
                     className="
                       p-3
@@ -808,15 +724,12 @@ export const IndiaWeatherMap: React.FC = () => {
                       gap-2
                     "
                   >
-
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
 
                     <span>
                       GREEN Tier: No adverse IMD warnings active.
                     </span>
-
                   </div>
-
                 )}
 
                 {/* Recommendation */}
@@ -831,33 +744,22 @@ export const IndiaWeatherMap: React.FC = () => {
                     space-y-2
                   "
                 >
-
                   <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-bold">
-
                     <Sparkles className="w-3.5 h-3.5" />
 
                     <span>
                       Actionable Recommendation
                     </span>
-
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed">
-
                     {districtWeather.rainfall > 10
-
                       ? 'Heavy precipitation active. Advise civic monitoring of low-lying subways and postponing rural spraying.'
-
                       : districtWeather.temperature > 38
-
                       ? 'Severe daytime thermal load. Ensure hydration and avoid non-essential midday outdoor activity.'
-
                       : 'Atmospheric parameters are optimal for civic transport and agricultural maintenance.'
-
                     }
-
                   </p>
-
                 </div>
 
                 {/* Telemetry */}
@@ -870,7 +772,6 @@ export const IndiaWeatherMap: React.FC = () => {
                     space-y-1
                   "
                 >
-
                   <p>
                     Station:{' '}
                     {districtWeather.source}
@@ -880,13 +781,10 @@ export const IndiaWeatherMap: React.FC = () => {
                     Observed:{' '}
                     {districtWeather.observed_at}
                   </p>
-
                 </div>
 
               </div>
-
             ) : null}
-
           </div>
 
           {/* Close Drawer */}
@@ -909,11 +807,8 @@ export const IndiaWeatherMap: React.FC = () => {
           >
             Close Drawer
           </button>
-
         </div>
-
       )}
-
     </div>
   );
 };
